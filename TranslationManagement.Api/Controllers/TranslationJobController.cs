@@ -95,7 +95,7 @@ namespace TranslationManagement.Api.Controllers
             {
                 if (customerName == null) 
                 {
-                    return BadRequest("customerName empty");
+                    return BadRequest("customerName is empty");
                 }
                 content = await reader.ReadToEndAsync();
             }

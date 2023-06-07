@@ -22,7 +22,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SampleData", "SampleData", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TranslationManagement.Core", "TranslationManagement.Core\TranslationManagement.Core.csproj", "{0F6E4DF5-31BC-480E-A72E-A7B4A88E3F4D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TranslationManagement.Web", "TranslationManagement.Web\TranslationManagement.Web.csproj", "{D6E98429-B761-4053-8453-345E849953FD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TranslationManagement.Web", "TranslationManagement.Web\TranslationManagement.Web.csproj", "{D6E98429-B761-4053-8453-345E849953FD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TranslationManagement.Tests", "TranslationManagement.Api.Test\TranslationManagement.Tests.csproj", "{4CA6FC02-9AE3-41D5-8F0F-EB4FA69B8EC5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -46,6 +48,10 @@ Global
 		{D6E98429-B761-4053-8453-345E849953FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D6E98429-B761-4053-8453-345E849953FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D6E98429-B761-4053-8453-345E849953FD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4CA6FC02-9AE3-41D5-8F0F-EB4FA69B8EC5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4CA6FC02-9AE3-41D5-8F0F-EB4FA69B8EC5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4CA6FC02-9AE3-41D5-8F0F-EB4FA69B8EC5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4CA6FC02-9AE3-41D5-8F0F-EB4FA69B8EC5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
