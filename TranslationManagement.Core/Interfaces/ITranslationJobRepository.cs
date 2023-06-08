@@ -11,5 +11,6 @@ namespace TranslationManagement.Core.Interfaces
         Task<List<TranslationJob>> ListAsync();
         Task<int> AddAsync(TranslationJob job);
         Task<int> UpdateAsync(TranslationJob job);
+        Task<int> DeleteAsync(TranslationJob job);
     }
 }

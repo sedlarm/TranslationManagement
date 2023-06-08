@@ -1,11 +1,7 @@
-using Castle.Core.Logging;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Moq;
-using System.Net.Http;
-using System.Web.Mvc;
 using TranslationManagement.Api.Controllers;
 using TranslationManagement.Core.Interfaces;
 using TranslationManagement.Core.Models;
@@ -41,7 +37,7 @@ namespace TranslationManagement.Tests.Api
             // Assert
             Assert.IsType<ActionResult<Translator>>(result);
             Assert.NotNull(badRequestResult);
-            Assert.Equal(badRequestResult.StatusCode, StatusCodes.Status400BadRequest);
+            Assert.Equal(StatusCodes.Status400BadRequest, badRequestResult.StatusCode);
         }
 
         [Fact]
@@ -60,7 +56,7 @@ namespace TranslationManagement.Tests.Api
             // Assert
             Assert.IsType<ActionResult<Translator>>(result);
             Assert.NotNull(createdResult);
-            Assert.Equal(createdResult.StatusCode, StatusCodes.Status201Created);
+            Assert.Equal(StatusCodes.Status201Created, createdResult.StatusCode);
         }
 
         [Fact]
@@ -74,10 +70,13 @@ namespace TranslationManagement.Tests.Api
                 Name = "Test Employee",
                 HourlyRate = 32,
             };
+
             await _controller.AddTranslator(translator);
+
+            // Assert
             _repo.Verify(x => x.AddAsync(It.IsAny<Translator>()), Times.Once);
-            Assert.Equal(t.Name, translator.Name);
-            Assert.Equal(t.HourlyRate, translator.HourlyRate);
+            Assert.Equal(translator.Name, t.Name);
+            Assert.Equal(translator.HourlyRate, t.HourlyRate);
         }
     }
 }

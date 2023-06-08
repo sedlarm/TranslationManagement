@@ -28,11 +28,16 @@ namespace TranslationManagement.Core.Data
 
         public Task<List<TranslationJob>> GetByTranslatorAsync(int translatorId)
         {
+            var query = _dbContext.TranslationJobs
+                .Include(req => req.Translator);
 
-            return _dbContext.TranslationJobs
-                .Where(j => j.Translator != null && j.Translator.Id == translatorId)
-                .Include(req => req.Translator)
-                .ToListAsync();
+            if (translatorId == 0) 
+            { 
+                return query.Where(j => j.Translator == null).ToListAsync();
+            } else
+            {
+                return query.Where(j => j.Translator != null && j.Translator.Id == translatorId).ToListAsync();
+            }
         }
 
         public Task<List<TranslationJob>> ListAsync()
@@ -51,6 +56,12 @@ namespace TranslationManagement.Core.Data
         public Task<int> UpdateAsync(TranslationJob job)
         {
             _dbContext.Entry(job).State = EntityState.Modified;
+            return _dbContext.SaveChangesAsync();
+        }
+
+        public Task<int> DeleteAsync(TranslationJob job)
+        {
+            _dbContext.Remove(job);
             return _dbContext.SaveChangesAsync();
         }
     }

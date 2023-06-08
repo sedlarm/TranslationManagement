@@ -16,6 +16,9 @@ using System.Collections.Generic;
 using System.Reflection.Metadata;
 using TranslationManagement.Core.Interfaces;
 using Microsoft.AspNetCore.Cors;
+using TranslationManagement.Core.Services;
+using System.IO.Pipes;
+using TranslationManagement.Core.Models.DTO;
 
 namespace TranslationManagement.Api.Controllers
 {
@@ -49,6 +52,15 @@ namespace TranslationManagement.Api.Controllers
             return Ok(jobs);
         }
 
+        [HttpGet("unassigned")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<TranslationJob>>> GetUnassignedJobs()
+        {
+            var jobs = await _jobRepository.GetByTranslatorAsync(0);
+
+            return Ok(jobs);
+        }
+
         [HttpGet("by-translator/{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<TranslationJob>>> GetJobsByTranslator(int id)
@@ -76,58 +88,96 @@ namespace TranslationManagement.Api.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<TranslationJob>> CreateJob(TranslationJob job, int translatorId)
+        public async Task<ActionResult<TranslationJob>> CreateJob(TranslationJob job, int translatorId = 0)
         {
-            return await CreateJobInternal(translatorId, job.CustomerName, job.OriginalContent);
+            return await CreateJobInternal(translatorId, job);
 
         }
 
-        [HttpPost("file")]
+        [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<TranslationJob>> CreateJobWithFile(IFormFile file, int translatorId, string? customerName)
+        public async Task<ActionResult<TranslationJob>> UpdateJob(int id, [FromBody]TranslationJobUpdate jobUpdate)
         {
-            var reader = new StreamReader(file.OpenReadStream());
-            string content;
-
-            if (file.FileName.EndsWith(".txt"))
-            {
-                if (customerName == null) 
-                {
-                    return BadRequest("customerName is empty");
-                }
-                content = await reader.ReadToEndAsync();
-            }
-            else if (file.FileName.EndsWith(".xml"))
-            {
-                //TODO: Add XML schema validation
-                var xdoc = XDocument.Parse(await reader.ReadToEndAsync());
-                content = xdoc.Root.Element("Content").Value;
-                customerName = xdoc.Root.Element("Customer").Value.Trim();
-            }
-            else
-            {
-                return BadRequest("unsupported file type");
-            }
-
-            return await CreateJobInternal(translatorId, customerName, content);
-        }
-
-        [HttpPost("{id}/update-status")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<TranslationJob>> UpdateJobStatus(int id, int translatorId, string newStatus = "")
-        {
-            _logger.LogInformation("Job status update request received: " + newStatus + " for job " + id.ToString() + " by translator " + translatorId.ToString());
-
             var job = await _jobRepository.GetByIdAsync(id);
             if (job == null)
             {
                 return NotFound();
             }
             
+            //check if valid status is provided
+            if (jobUpdate.Status != null && !StatusExists(jobUpdate.Status))
+            {
+                return BadRequest("invalid status: " + jobUpdate.Status);
+            }
+
+            if (jobUpdate.Status != null && !job.ChangeStatus(jobUpdate.Status))
+            {
+                return BadRequest("invalid status state change");
+            }
+
+            job.Price = jobUpdate.Price;
+            job.CustomerName = jobUpdate.CustomerName;
+            job.OriginalContent = jobUpdate.OriginalContent;
+            job.TranslatedContent = jobUpdate.TranslatedContent;
+            job.Price = jobUpdate.Price;
+
+            await _jobRepository.UpdateAsync(job);
+
+            return NoContent(); 
+        }
+
+        [HttpPost("file")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<TranslationJob>> CreateJobWithFile(IFormFile file, int translatorId = 0, string customerName = "")
+        {
+            TranslationJob job;
+
+            if (file.FileName.EndsWith(".txt"))
+            {
+                if (string.IsNullOrEmpty(customerName)) 
+                {
+                    return BadRequest("customerName is empty");
+                }
+                //reads content from text file
+                job = await TranslationJobFileReader.CreateTranslationJobFromStream(
+                    TranslationJobFileReader.FileType.TXT, 
+                    file.OpenReadStream()
+                );
+                job.CustomerName = customerName;
+            }
+            else if (file.FileName.EndsWith(".xml"))
+            {
+                //reads and parses job properties from XML file
+                job = await TranslationJobFileReader.CreateTranslationJobFromStream(
+                    TranslationJobFileReader.FileType.XML,
+                    file.OpenReadStream()
+                );
+            }
+            else
+            {
+                return BadRequest("unsupported file type");
+            }
+
+            return await CreateJobInternal(translatorId, job);
+        }
+
+        [HttpPost("{id}/update-status")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<TranslationJob>> UpdateJobStatus(int id, string newStatus = "")
+        {
+            var job = await _jobRepository.GetByIdAsync(id);
+            if (job == null)
+            {
+                return NotFound();
+            }
+            
+            //check if valid status is provided
             if (!StatusExists(newStatus))
             {
                 return BadRequest("invalid status");
@@ -143,19 +193,64 @@ namespace TranslationManagement.Api.Controllers
             return NoContent();
         }
 
-        private async Task<ActionResult<TranslationJob>> CreateJobInternal(int translatorId, string customerName, string originalContent)
+        [HttpPost("{id}/assign-translator/{translatorId}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<TranslationJob>> AssignTranslator(int id, int translatorId)
         {
+            var job = await _jobRepository.GetByIdAsync(id);
+            if (job == null)
+            {
+                return NotFound();
+            }
+
             var translator = await _translatorRepository.GetByIdAsync(translatorId);
             if (translator == null)
             {
-                return NotFound("invalid translatorId");
+                return BadRequest("translator doesn't exists");
             }
 
-            var job = new TranslationJob(translator, customerName)
+            job.Translator = translator;
+
+            await _jobRepository.UpdateAsync(job);
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<TranslationJob>> DeleteJob(int id)
+        {
+            var job = await _jobRepository.GetByIdAsync(id);
+            if (job == null)
             {
-                OriginalContent = originalContent,
-                Status = TranslationJobStatus.New,
-            };
+                return NotFound();
+            }
+
+            await _jobRepository.DeleteAsync(job);
+
+            return NoContent();
+        }
+
+        private async Task<ActionResult<TranslationJob>> CreateJobInternal(int translatorId, TranslationJob job)
+        {
+            if (translatorId > 0)
+            {
+                var translator = await _translatorRepository.GetByIdAsync(translatorId);
+                if (translator == null)
+                {
+                    return NotFound("invalid translatorId");
+                }
+                job.Translator = translator;
+            }
+
+            if (!string.IsNullOrEmpty(job.Status) && !StatusExists(job.Status))
+            {
+                return BadRequest("invalid status");
+            }
+
             job.UpdatePriceByPricePerCharacter(pricePerCharacter);
 
             bool success = await _jobRepository.AddAsync(job) > 0;
@@ -163,7 +258,7 @@ namespace TranslationManagement.Api.Controllers
             {
                 var notificationSvc = new UnreliableNotificationService();
                 bool sent = false;
-                do
+                while(!sent)
                 {
                     try
                     {
@@ -173,17 +268,13 @@ namespace TranslationManagement.Api.Controllers
                     {
                         _logger.LogWarning("New job notification not sent, exception: " + ex.Message);
                     }
-
                 }
-                while (!sent);
-
-                _logger.LogInformation("New job notification sent with status: " + sent.ToString());
             }
 
             return CreatedAtAction(nameof(GetJob), new { id = job.Id }, job);
         }
 
-        private bool StatusExists(string status)
+        private static bool StatusExists(string status)
         {
             return typeof(TranslationJobStatus).GetFields().Count(prop => prop.Name == status) > 0;
         }

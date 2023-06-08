@@ -10,6 +10,21 @@ const baseUrl = document.getElementsByTagName('base')[0].getAttribute('href');
 const rootElement = document.getElementById('root');
 const root = createRoot(rootElement);
 
+const originalFetch = global.fetch;
+
+export const applyBaseUrlToFetch = (baseUrl) => {
+    // replace the global fetch() with our version where we prefix the given URL with a baseUrl
+    global.fetch = (url, options) => {
+        const finalUrl = baseUrl + url;
+        return originalFetch(finalUrl, options);
+    };
+};
+
+if (process.env.REACT_APP_BACKEND_API_BASE_URL !== undefined && process.env.REACT_APP_BACKEND_API_BASE_URL !== '') {
+    console.log(process.env.REACT_APP_BACKEND_API_BASE_URL);
+    applyBaseUrlToFetch(process.env.REACT_APP_BACKEND_API_BASE_URL);
+}
+
 root.render(
   <BrowserRouter basename={baseUrl}>
     <App />

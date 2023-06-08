@@ -50,14 +50,13 @@ export class Translators extends Component {
   }
 
     async populateJobsData() {
-        const request = new Request("http://localhost:5000/api/translators", {
+        const response = await fetch("/api/translators", {
             method: "get",
             mode: 'cors',
             headers: {
-                Accept: "application/json"
+                "Accept": "application/json"
             }
         });
-        const response = await fetch(request);
         const data = await response.json();
         console.log(data);
         this.setState({ translators: data, loading: false });

@@ -10,7 +10,7 @@ namespace TranslationManagement.Core.Models
             CustomerName = customerName;
         }
 
-        public TranslationJob() 
+        public TranslationJob()
         {
         }
 
@@ -23,8 +23,10 @@ namespace TranslationManagement.Core.Models
 
         public bool ChangeStatus(string newStatus)
         {
-            if ((Status == TranslationJobStatus.New && newStatus == TranslationJobStatus.Completed) ||
-                (Status == TranslationJobStatus.Completed || newStatus == TranslationJobStatus.New)) 
+            if (Status == newStatus) return true;
+
+            if ((Status == TranslationJobStatus.New && newStatus == TranslationJobStatus.InProgress) ||
+                (Status == TranslationJobStatus.InProgress && newStatus == TranslationJobStatus.Completed)) 
             {
                 Status = newStatus;
 
