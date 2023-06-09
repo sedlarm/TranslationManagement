@@ -5,7 +5,7 @@ namespace External.ThirdParty.Services
 {
     // DO NOT MODIFY
     // this is an external service out of your hands
-    
+
     public sealed class UnreliableNotificationService : INotificationService
     {
         /// <summary>

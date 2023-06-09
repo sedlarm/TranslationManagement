@@ -18,12 +18,12 @@ namespace TranslationManagement.Core.Services
 
             var reader = new StreamReader(fileStream);
             switch (type)
-            { 
+            {
                 case FileType.TXT:
                     content = await reader.ReadToEndAsync();
                     break;
 
-                case FileType.XML:  
+                case FileType.XML:
                     //TODO: Add XML schema validation
                     try
                     {
@@ -32,7 +32,8 @@ namespace TranslationManagement.Core.Services
                         {
                             content = xdoc.Root.Element("Content").Value;
                             customerName = xdoc.Root.Element("Customer").Value.Trim();
-                        } else
+                        }
+                        else
                         {
                             throw new InvalidDataException();
                         }
@@ -43,7 +44,7 @@ namespace TranslationManagement.Core.Services
                         return null;
                     }
                     break;
-                default: 
+                default:
                     throw new InvalidEnumArgumentException();
             }
 

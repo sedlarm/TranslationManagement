@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using TranslationManagement.Core.Models;
+﻿using TranslationManagement.Core.Models;
 
 namespace TranslationManagement.Core.Interfaces
 {

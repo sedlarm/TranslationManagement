@@ -1,14 +1,12 @@
-﻿using System;
-using System.Linq;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using TranslationManagement.Core.Models;
-using System.Threading.Tasks;
 using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Http;
+using System.Linq;
+using System.Threading.Tasks;
+using TranslationManagement.Api.DTO;
 using TranslationManagement.Core.Interfaces;
+using TranslationManagement.Core.Models;
 
 namespace TranslationManagement.Api.Controllers
 {
@@ -61,18 +59,31 @@ namespace TranslationManagement.Api.Controllers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<Translator>> AddTranslator(Translator translator)
+        public async Task<ActionResult<Translator>> AddTranslator(TranslatorCreate translatorCreate)
         {
-            if(!StatusExists(translator.Status))
+            var translator = new Translator
             {
-                return BadRequest("invalid status");
+                Name = translatorCreate.Name,
+                HourlyRate = translatorCreate.HourlyRate,
+                CreditCardNumber = translatorCreate.CreditCardNumber,
+            };
+
+            if (!string.IsNullOrEmpty(translatorCreate.Status))
+            {
+                if (!StatusExists(translatorCreate.Status))
+                {
+                    return BadRequest("invalid status");
+                } else
+                {
+                    translator.Status = translatorCreate.Status;
+                }
             }
 
             await _translatorRepository.AddAsync(translator);
 
             return CreatedAtAction(nameof(GetTranslator), new { id = translator.Id }, translator);
         }
-        
+
         [HttpPost("{id}/update-status")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

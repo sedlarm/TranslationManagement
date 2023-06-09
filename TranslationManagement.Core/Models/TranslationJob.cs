@@ -26,7 +26,7 @@ namespace TranslationManagement.Core.Models
             if (Status == newStatus) return true;
 
             if ((Status == TranslationJobStatus.New && newStatus == TranslationJobStatus.InProgress) ||
-                (Status == TranslationJobStatus.InProgress && newStatus == TranslationJobStatus.Completed)) 
+                (Status == TranslationJobStatus.InProgress && newStatus == TranslationJobStatus.Completed))
             {
                 Status = newStatus;
 

@@ -1,10 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 using TranslationManagement.Core.Interfaces;
 using TranslationManagement.Core.Models;
 
@@ -31,10 +25,11 @@ namespace TranslationManagement.Core.Data
             var query = _dbContext.TranslationJobs
                 .Include(req => req.Translator);
 
-            if (translatorId == 0) 
-            { 
+            if (translatorId == 0)
+            {
                 return query.Where(j => j.Translator == null).ToListAsync();
-            } else
+            }
+            else
             {
                 return query.Where(j => j.Translator != null && j.Translator.Id == translatorId).ToListAsync();
             }

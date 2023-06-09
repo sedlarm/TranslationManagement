@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.Xml.Linq;
 using TranslationManagement.Core.Interfaces;
 using TranslationManagement.Core.Models;
 

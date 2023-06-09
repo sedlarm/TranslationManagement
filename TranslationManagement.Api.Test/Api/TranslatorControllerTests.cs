@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using TranslationManagement.Api.Controllers;
+using TranslationManagement.Api.DTO;
 using TranslationManagement.Core.Interfaces;
 using TranslationManagement.Core.Models;
 
@@ -25,9 +26,11 @@ namespace TranslationManagement.Tests.Api
         {
             _controller.ModelState.AddModelError("error", "some error");
 
-            var t = new Translator
+            var t = new TranslatorCreate
             {
-                Status = "uknkonwn"
+                Status = "uknkonwn",
+                Name =  "test",
+                HourlyRate= 10,
             };
 
             // Act
@@ -43,14 +46,15 @@ namespace TranslationManagement.Tests.Api
         [Fact]
         public async Task AddTranslatorReturnOk()
         {
-            var t = new Translator
+            var translator = new TranslatorCreate
             {
                 Name = "test",
                 HourlyRate = 10,
+                Status = TranslatorStatus.Applicant,
             };
 
             // Act
-            var result = await _controller.AddTranslator(t);
+            var result = await _controller.AddTranslator(translator);
             var createdResult = result.Result as CreatedAtActionResult;
 
             // Assert
@@ -65,10 +69,11 @@ namespace TranslationManagement.Tests.Api
             Translator? t = null;
             _repo.Setup(r => r.AddAsync(It.IsAny<Translator>()))
                 .Callback<Translator>(x => t = x);
-            var translator = new Translator
+            var translator = new TranslatorCreate
             {
-                Name = "Test Employee",
-                HourlyRate = 32,
+                Name = "test",
+                HourlyRate = 10,
+                Status = TranslatorStatus.Applicant,
             };
 
             await _controller.AddTranslator(translator);

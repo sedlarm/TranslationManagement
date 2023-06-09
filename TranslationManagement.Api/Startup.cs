@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
-using Microsoft.EntityFrameworkCore;
 using TranslationManagement.Core.Data;
 using TranslationManagement.Core.Interfaces;
 
@@ -22,7 +22,7 @@ namespace TranslationManagement.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
-           
+
             services.AddControllers();
 
             services.AddCors(options =>
@@ -41,7 +41,7 @@ namespace TranslationManagement.Api
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "TranslationManagement.Api", Version = "v1" });
             });
 
-            services.AddDbContext<AppDbContext>(options => 
+            services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlite("Data Source=TranslationAppDatabase.db",
                     b => b.MigrationsAssembly("TranslationManagement.Core")
                 ));

@@ -2,9 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
-using System.Collections;
 using System.Text;
 using TranslationManagement.Api.Controllers;
+using TranslationManagement.Api.DTO;
 using TranslationManagement.Core.Interfaces;
 using TranslationManagement.Core.Models;
 
@@ -29,9 +29,11 @@ namespace TranslationManagement.Tests.Api
         {
             _controller.ModelState.AddModelError("error", "some error");
 
-            var job = new TranslationJob
+            var job = new TranslationJobCreate
             {
-                Status = "uknkonwn"
+                CustomerName= "Test",
+                OriginalContent = "some content to translate",
+                Status = "invalid"
             };
 
             //tells repository that translator object exists
@@ -39,7 +41,7 @@ namespace TranslationManagement.Tests.Api
             _repo2.Setup(r => r.GetByIdAsync(1)).Returns(Task.FromResult<Translator?>(t));
 
             // Act
-            var result = await _controller.CreateJob(job, 1);
+            var result = await _controller.CreateJob(job);
             var badRequestResult = result.Result as BadRequestObjectResult;
 
             // Assert

@@ -6,7 +6,7 @@ export class Home extends Component {
 
     constructor(props) {
         super(props);
-        this.state = { message: "", buttonEnabled: true };
+        this.state = { message: "", buttonEnabled: true, jobsversion:1 };
     }
 
     render() {
@@ -15,7 +15,7 @@ export class Home extends Component {
     return (
       <div>
             <h1>Welcome to Translation Management admin</h1>
-            <p>Add new job for Translator #1</p>
+            <p>Add new unassigned job</p>
             <form onSubmit={this.onCreateJob}>
             <p>
                 <label>Customer Name:
@@ -29,7 +29,7 @@ export class Home extends Component {
                 <button type="submit" disabled={buttonState}>Create</button>
             </form>
             <p>{contents}</p>
-            <TranslationJobs unassigned="true" />
+            <TranslationJobs unassigned="true" key={this.state.jobsversion} />
       </div>
     );
   }
@@ -40,13 +40,13 @@ export class Home extends Component {
             customerName: this.refs.CustomerName.value,
             originalContent: this.refs.ContentToTranslate.value
       };
-      fetch("/api/jobs?translatorId=1", {
+      fetch("/api/jobs", {
           method: 'POST',
           headers: { 'Content-type': 'application/json' },
           body: JSON.stringify(jobInfo)
       }).then(r => r.json()).then(res => {
           if (res) {
-              this.setState({ message: "created job #" + res.id});
+              this.setState({ message: "created job #" + res.id, jobsversion: this.state.jobsversion+1 });
           }
       });
       this.setState({ buttonEnabled: true })

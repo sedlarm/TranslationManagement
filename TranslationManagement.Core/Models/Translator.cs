@@ -1,5 +1,4 @@
 ﻿using TranslationManagement.Core.Models.Common;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TranslationManagement.Core.Models
 {
